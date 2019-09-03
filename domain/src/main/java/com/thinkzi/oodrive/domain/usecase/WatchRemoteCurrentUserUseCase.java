@@ -13,12 +13,12 @@ import io.reactivex.Single;
 /**
  * provide UseCase(Clean Architecture) to watch root item from server
  * */
-public final class WatchRemoteRootItemUseCase extends SingleUseCase<User, Void> {
+public final class WatchRemoteCurrentUserUseCase extends SingleUseCase<User, Void> {
 
     private final IItemRepository _iItemRepository;
 
     @Inject
-    public WatchRemoteRootItemUseCase(ThreadExecutor _threadExecutor, PostExecutionThread _postExecutionThread, IItemRepository _iItemRepository) {
+    public WatchRemoteCurrentUserUseCase(ThreadExecutor _threadExecutor, PostExecutionThread _postExecutionThread, IItemRepository _iItemRepository) {
         super(_threadExecutor, _postExecutionThread);
         this._iItemRepository = _iItemRepository;
     }

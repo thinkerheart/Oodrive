@@ -17,7 +17,7 @@ public class APIConnection {
 
     private static OkHttpClient _okHttpClient;
     private static volatile Retrofit _retrofit = null;
-    private static String API_BASE_URL = "http://localhost:8080";
+    private static String API_BASE_URL = "http://192.168.0.188:8080";
 
     public static IRestAPI getInstance() {
 

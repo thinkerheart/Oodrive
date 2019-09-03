@@ -1,20 +1,20 @@
-package com.thinkzi.oodrive.domain.entity;
+package com.thinkzi.oodrive.ui.model;
 
 /**
- * provide User for saving current user and root item data of domain layer (business logic layer) in Clean Architecture
+ * provide UserUIModel for saving current user and root item data of app(ui) layer in Clean Architecture
  * */
-public class User {
+public class UserUIModel {
 
     private String _firstName;
 
     private String _lastName;
 
-    private Item _rootItem;
+    private ItemUIModel _rootItem;
 
-    public User() {
+    public UserUIModel() {
         this._firstName = "";
         this._lastName = "";
-        this._rootItem = new Item();
+        this._rootItem = new ItemUIModel();
     }
 
     public String getFirstName() {
@@ -33,11 +33,11 @@ public class User {
         this._lastName = _lastName;
     }
 
-    public Item getRootItem() {
+    public ItemUIModel getRootItem() {
         return _rootItem;
     }
 
-    public void setRootItem(Item _rootItem) {
+    public void setRootItem(ItemUIModel _rootItem) {
         this._rootItem = _rootItem;
     }
 

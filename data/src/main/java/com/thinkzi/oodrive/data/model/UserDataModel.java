@@ -20,6 +20,12 @@ public class UserDataModel {
     @Expose
     private ItemDataModel _rootItem;
 
+    public UserDataModel() {
+        this._firstName = "";
+        this._lastName = "";
+        this._rootItem = new ItemDataModel();
+    }
+
     public String getFirstName() {
         return _firstName;
     }
