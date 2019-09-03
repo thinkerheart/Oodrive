@@ -1,6 +1,7 @@
 package com.thinkzi.oodrive.domain.repository;
 
 import com.thinkzi.oodrive.domain.entity.Item;
+import com.thinkzi.oodrive.domain.entity.User;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -11,9 +12,9 @@ import io.reactivex.Single;
 public interface IItemRepository {
 
     /**
-     * get root item data from server
+     * get current user and retrieve the root item from server
      * */
-    Single<Item> getRemoteRootItem();
+    Single<User> getRemoteCurrentUser();
 
     /**
      * get content of a folder from server

@@ -1,6 +1,7 @@
 package com.thinkzi.oodrive.domain.usecase;
 
 import com.thinkzi.oodrive.domain.entity.Item;
+import com.thinkzi.oodrive.domain.entity.User;
 import com.thinkzi.oodrive.domain.executor.PostExecutionThread;
 import com.thinkzi.oodrive.domain.executor.ThreadExecutor;
 import com.thinkzi.oodrive.domain.repository.IItemRepository;
@@ -12,7 +13,7 @@ import io.reactivex.Single;
 /**
  * provide UseCase(Clean Architecture) to watch root item from server
  * */
-public final class WatchRemoteRootItemUseCase extends SingleUseCase<Item, Void> {
+public final class WatchRemoteRootItemUseCase extends SingleUseCase<User, Void> {
 
     private final IItemRepository _iItemRepository;
 
@@ -23,7 +24,7 @@ public final class WatchRemoteRootItemUseCase extends SingleUseCase<Item, Void> 
     }
 
     @Override
-    protected Single<Item> buildSingleUseCase(Void _params) {
-        return _iItemRepository.getRemoteRootItem();
+    protected Single<User> buildSingleUseCase(Void _params) {
+        return _iItemRepository.getRemoteCurrentUser();
     }
 }

@@ -1,16 +1,31 @@
 package com.thinkzi.oodrive.data.repository;
 
-import android.content.Context;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
+import com.thinkzi.oodrive.data.exception.NetworkConnectionException;
 import com.thinkzi.oodrive.data.mapper.ItemDataModelMapper;
+import com.thinkzi.oodrive.data.mapper.UserDataModelMapper;
+import com.thinkzi.oodrive.data.model.ItemDataModel;
+import com.thinkzi.oodrive.data.model.UserDataModel;
+import com.thinkzi.oodrive.data.net.APIConnection;
 import com.thinkzi.oodrive.domain.entity.Item;
-import com.thinkzi.oodrive.domain.executor.PostExecutionThread;
-import com.thinkzi.oodrive.domain.executor.ThreadExecutor;
+import com.thinkzi.oodrive.domain.entity.User;
 import com.thinkzi.oodrive.domain.repository.IItemRepository;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.ObservableSource;
 import io.reactivex.Single;
+import io.reactivex.SingleEmitter;
+import io.reactivex.SingleOnSubscribe;
+import io.reactivex.SingleSource;
+import io.reactivex.functions.Function;
+import okhttp3.ResponseBody;
 
 /**
  * provide implementation for item data repository
@@ -21,32 +36,90 @@ public class ItemRepository implements IItemRepository {
     // mapper to map data between 2 layers data and domain
     private final ItemDataModelMapper _itemDataModelMapper;
 
-    // application conext
-    private final Context _context;
-
-    // executor thread pool to execute work
-    private final ThreadExecutor _threadExecutor;
-
-    // thread created to change the execution context
-    private final PostExecutionThread _postExecutionThread;
+    // mapper to map data between 2 layers data and domain
+    private final UserDataModelMapper _userDataModelMapper;
 
     @Inject
-    public ItemRepository(ItemDataModelMapper _itemDataModelMapper, Context _context, ThreadExecutor _threadExecutor, PostExecutionThread _postExecutionThread) {
+    public ItemRepository(ItemDataModelMapper _itemDataModelMapper, UserDataModelMapper _userDataModelMapper) {
 
         this._itemDataModelMapper = _itemDataModelMapper;
-        this._context = _context;
-        this._threadExecutor = _threadExecutor;
-        this._postExecutionThread = _postExecutionThread;
+        this._userDataModelMapper = _userDataModelMapper;
 
     }
 
     @Override
-    public Single<Item> getRemoteRootItem() {
-        return null;
+    public Single<User> getRemoteCurrentUser() {
+        return APIConnection.getInstance().getRemoteCurrentUser().flatMap(new Function<UserDataModel, SingleSource<User>>() {
+
+            @Override
+            public SingleSource<User> apply(final UserDataModel userDataModel) throws Exception {
+
+                return Single.create(new SingleOnSubscribe<User>() {
+
+                    @Override
+                    public void subscribe(SingleEmitter<User> emitter) throws Exception {
+                        try {
+                            // send photo data object as a stream to observers
+                            emitter.onSuccess(_userDataModelMapper.transform(userDataModel));
+                        } catch (Exception e) {
+                            // send a error as result to observers
+                            emitter.onError(new NetworkConnectionException(e.getCause()));
+                        }
+                    }
+
+                });
+
+            }
+
+        });
     }
 
     @Override
     public Observable<Item> getRemoteFolderContent(String _id) {
-        return null;
+        return APIConnection.getInstance().getRemoteFolderContent(_id).flatMapObservable(new Function<ResponseBody, ObservableSource<Item>>() {
+
+            @Override
+            public ObservableSource<Item> apply(final ResponseBody responseBody) throws Exception {
+
+                return Observable.create(new ObservableOnSubscribe<Item>() {
+
+                    @Override
+                    public void subscribe(ObservableEmitter<Item> emitter) throws Exception {
+
+                        try {
+
+                            // use Gson stream to treat Json result. Idea: not put all json objects in memory
+                            Gson _gson = new GsonBuilder().create();
+                            JsonReader _reader = _gson.newJsonReader(responseBody.charStream());
+
+                            // start reading Json data array
+                            _reader.beginArray();
+
+                            // while Json data array has next item
+                            while (_reader.hasNext() && _reader.peek() != JsonToken.END_ARRAY) {
+
+                                // read a Item data object from Json data
+                                ItemDataModel _itemDataModel = _gson.fromJson(_reader, ItemDataModel.class);
+
+                                // send Item data object as a stream to observers
+                                emitter.onNext(_itemDataModelMapper.transform(_itemDataModel));
+
+                            }
+
+                            // send work complete result to observers
+                            emitter.onComplete();
+
+                        } catch (Exception e) {
+                            // send a error as result to observers
+                            emitter.onError(new NetworkConnectionException(e.getCause()));
+                        }
+
+                    }
+
+                });
+
+            }
+
+        });
     }
 }

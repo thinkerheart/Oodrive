@@ -1,6 +1,7 @@
 package com.thinkzi.oodrive.data.mapper;
 
 import com.thinkzi.oodrive.data.model.ItemDataModel;
+import com.thinkzi.oodrive.data.model.UserDataModel;
 import com.thinkzi.oodrive.domain.entity.Item;
 
 import org.joda.time.DateTime;

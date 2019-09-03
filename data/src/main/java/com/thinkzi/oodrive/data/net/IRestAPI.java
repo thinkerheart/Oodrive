@@ -1,8 +1,11 @@
 package com.thinkzi.oodrive.data.net;
 
+import com.thinkzi.oodrive.data.model.UserDataModel;
+
 import io.reactivex.Single;
 import okhttp3.ResponseBody;
 import retrofit2.http.GET;
+import retrofit2.http.Path;
 import retrofit2.http.Streaming;
 
 /**
@@ -11,10 +14,16 @@ import retrofit2.http.Streaming;
 public interface IRestAPI {
 
     /**
-     * get photos from server
+     * get content of a folder from server
      * */
     @Streaming
-    @GET("/photos")
-    Single<ResponseBody> getPhotoStream();
+    @GET("/items/{id}")
+    Single<ResponseBody> getRemoteFolderContent(@Path("id")String _id);
+
+    /**
+     * get current user and retrieve the root item
+     * */
+    @GET("/me")
+    Single<UserDataModel> getRemoteCurrentUser();
 
 }
