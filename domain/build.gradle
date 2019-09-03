@@ -1,0 +1,16 @@
+apply plugin: 'java-library'
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    //RxJava
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.7'
+
+    //Dagger
+    compile 'com.google.dagger:dagger:2.20'
+    annotationProcessor 'com.google.dagger:dagger-compiler:2.20'
+
+    //Joda-Time
+    compile 'joda-time:joda-time:2.10.3'
+
+}
