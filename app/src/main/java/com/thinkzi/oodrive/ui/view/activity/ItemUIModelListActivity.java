@@ -3,6 +3,7 @@ package com.thinkzi.oodrive.ui.view.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -18,6 +19,7 @@ import com.thinkzi.oodrive.ui.viewmodel.ItemUIModelListViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 import javax.inject.Inject;
 
@@ -66,6 +68,7 @@ public class ItemUIModelListActivity extends BaseActivity {
             @Override
             public void onItemClick(ItemUIModel itemUIModel) {
                 Toast.makeText(ItemUIModelListActivity.this, itemUIModel.getName(), Toast.LENGTH_LONG).show();
+                _itemUIModelListViewModel.getRemoteFolderContent(itemUIModel);
             }
         });
 
@@ -79,17 +82,50 @@ public class ItemUIModelListActivity extends BaseActivity {
             public void onChanged(List<ItemUIModel> itemUIModelList) {
                 _itemUIModelListAdapter.setItemUIModelList(itemUIModelList);
 
-                Toast.makeText(ItemUIModelListActivity.this, itemUIModelList.size() + "", Toast.LENGTH_LONG).show();
+                //Toast.makeText(ItemUIModelListActivity.this, itemUIModelList.size() + "", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        _itemUIModelListViewModel.getItemUIModelStackMutableLiveData().observe(ItemUIModelListActivity.this, new Observer<Stack<ItemUIModel>>() {
+            @Override
+            public void onChanged(Stack<ItemUIModel> itemUIModels) {
+                if (itemUIModels.size() > 1) {
+                    getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+                } else {
+                    getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+                }
             }
         });
 
     }
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                if (_itemUIModelListViewModel.getItemUIModelStackMutableLiveData().getValue().size() > 1) {
+
+                    _itemUIModelListViewModel.goBackToParentFolder(_itemUIModelListViewModel.popItemUIModelStackMutableLiveData().getParentId());
+
+                }
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
     public void onBackPressed() {
 
-        finish();
-        System.exit(0);
+        if (_itemUIModelListViewModel.getItemUIModelStackMutableLiveData().getValue().size() > 1) {
+
+            _itemUIModelListViewModel.goBackToParentFolder(_itemUIModelListViewModel.popItemUIModelStackMutableLiveData().getParentId());
+
+        } else {
+            finish();
+            System.exit(0);
+        }
 
     }
 }

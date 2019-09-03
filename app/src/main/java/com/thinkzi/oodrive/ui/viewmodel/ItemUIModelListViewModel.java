@@ -18,6 +18,7 @@ import com.thinkzi.oodrive.ui.model.UserUIModel;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -47,6 +48,9 @@ public class ItemUIModelListViewModel extends BaseViewModel {
     // a live data UserUIModel
     private final MutableLiveData<UserUIModel> _userUIModelMutableLiveData;
 
+    // a live data of folder stack navigation
+    private final MutableLiveData<Stack<ItemUIModel>> _itemUIModelStackMutableLiveData;
+
     // application context
     private final Context _context;
 
@@ -62,6 +66,8 @@ public class ItemUIModelListViewModel extends BaseViewModel {
         this._itemUIModelListMutableLiveData.setValue(new ArrayList<ItemUIModel>());
         this._userUIModelMutableLiveData = new MutableLiveData<>();
         this._userUIModelMutableLiveData.setValue(new UserUIModel());
+        this._itemUIModelStackMutableLiveData = new MutableLiveData<>();
+        this._itemUIModelStackMutableLiveData.setValue(new Stack<ItemUIModel>());
         this._context = _context;
 
         getRemoteCurrentUser();
@@ -75,6 +81,10 @@ public class ItemUIModelListViewModel extends BaseViewModel {
         return _userUIModelMutableLiveData;
     }
 
+    public MutableLiveData<Stack<ItemUIModel>> getItemUIModelStackMutableLiveData() {
+        return _itemUIModelStackMutableLiveData;
+    }
+
     /**
      * get current user and retrieve the root item from server
      * */
@@ -83,11 +93,61 @@ public class ItemUIModelListViewModel extends BaseViewModel {
     }
 
     /**
+     * clear list of ItemUIModel
+     * */
+    private void clearItemUIModelList() {
+        List<ItemUIModel> _itemUIModelList = _itemUIModelListMutableLiveData.getValue();
+        _itemUIModelList.clear();
+        _itemUIModelListMutableLiveData.setValue(_itemUIModelList);
+    }
+
+    /**
+     * get content of a folder from server
+     * */
+    public void getRemoteFolderContent(ItemUIModel _itemUIModel) {
+
+        if (_itemUIModel.getIsDir()) {
+            Stack<ItemUIModel> _itemUIModelStack = _itemUIModelStackMutableLiveData.getValue();
+            _itemUIModelStack.push(_itemUIModel);
+            _itemUIModelStackMutableLiveData.setValue(_itemUIModelStack);
+
+            clearItemUIModelList();
+            _watchRemoteFolderContentUseCase.execute(new WatchRemoteFolderContentObserver(), WatchRemoteFolderContentUseCase.Ps.forPs(_itemUIModel.getId()));
+        }
+
+    }
+
+    /**
+     * pop live data ItemUIModelStack
+     * */
+    public ItemUIModel popItemUIModelStackMutableLiveData() {
+        Stack<ItemUIModel> _itemUIModelStack = _itemUIModelStackMutableLiveData.getValue();
+        ItemUIModel _itemUIModel = _itemUIModelStack.pop();
+        _itemUIModelStackMutableLiveData.setValue(_itemUIModelStack);
+
+        return _itemUIModel;
+    }
+
+    /**
+     * go back to parent folder
+     * */
+    public void goBackToParentFolder(String _id) {
+
+        clearItemUIModelList();
+        _watchRemoteFolderContentUseCase.execute(new WatchRemoteFolderContentObserver(), WatchRemoteFolderContentUseCase.Ps.forPs(_id));
+
+    }
+
+    /**
      * handle received current user from WatchRemoteCurrentUserUseCase
      * */
     private void handleUser(User _user) {
         _userUIModelMutableLiveData.setValue(_userUIModelMapper.transform(_user));
-        _watchRemoteFolderContentUseCase.execute(new WatchRemoteFolderContentObserver(), WatchRemoteFolderContentUseCase.Ps.forPs(_userUIModelMutableLiveData.getValue().getRootItem().getId()));
+        //getRemoteFolderContent(_userUIModelMutableLiveData.getValue().getRootItem());
+        clearItemUIModelList();
+        List<ItemUIModel> _itemUIModelList = _itemUIModelListMutableLiveData.getValue();
+        _itemUIModelList.add(_userUIModelMutableLiveData.getValue().getRootItem());
+        _itemUIModelListMutableLiveData.setValue(_itemUIModelList);
     }
 
     /**
@@ -134,7 +194,7 @@ public class ItemUIModelListViewModel extends BaseViewModel {
 
         @Override
         public void onComplete() {
-            _watchRemoteFolderContentUseCase.dispose();
+            //_watchRemoteFolderContentUseCase.dispose();
         }
 
     }
