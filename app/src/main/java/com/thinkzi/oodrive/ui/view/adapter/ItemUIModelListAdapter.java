@@ -26,22 +26,36 @@ public class ItemUIModelListAdapter extends RecyclerView.Adapter<ItemUIModelList
 
     }
 
+    /**
+     * provide listener for onItemLongClick
+     * */
+    public interface OnItemLongClickListener {
+
+        void onItemLongClick(ItemUIModel _itemUIModel);
+
+    }
+
     // list of ItemUIModel
     private List<ItemUIModel> _itemUIModelList;
 
     // listener for onItemClick
     private OnItemClickListener _onItemClickListener;
 
+    // listener for onItemClick
+    private OnItemLongClickListener _onItemLongClickListener;
+
     // application context
     private Context _context;
 
-    public ItemUIModelListAdapter(Context _context, List<ItemUIModel> _itemUIModelList, OnItemClickListener _onItemClickListener) {
+    public ItemUIModelListAdapter(Context _context, List<ItemUIModel> _itemUIModelList, OnItemClickListener _onItemClickListener, OnItemLongClickListener _onItemLongClickListener) {
 
         this._context = _context;
 
         this._itemUIModelList = _itemUIModelList;
 
         this._onItemClickListener = _onItemClickListener;
+
+        this._onItemLongClickListener = _onItemLongClickListener;
     }
 
     @NonNull
@@ -55,7 +69,7 @@ public class ItemUIModelListAdapter extends RecyclerView.Adapter<ItemUIModelList
     @Override
     public void onBindViewHolder(@NonNull ItemUIModelViewHolder holder, int position) {
 
-        holder.bind(_itemUIModelList.get(position), _onItemClickListener);
+        holder.bind(_itemUIModelList.get(position), _onItemClickListener, _onItemLongClickListener);
 
     }
 
@@ -86,7 +100,7 @@ public class ItemUIModelListAdapter extends RecyclerView.Adapter<ItemUIModelList
             this._itemItemBinding = _itemItemBinding;
         }
 
-        void bind(final ItemUIModel _itemUIModel, final OnItemClickListener _onItemClickListener) {
+        void bind(final ItemUIModel _itemUIModel, final OnItemClickListener _onItemClickListener, final OnItemLongClickListener _onItemLongClickListener) {
             _itemItemBinding.lblItemTitle.setText(_itemUIModel.getName());
 
             _itemItemBinding.executePendingBindings();
@@ -95,6 +109,14 @@ public class ItemUIModelListAdapter extends RecyclerView.Adapter<ItemUIModelList
                 @Override
                 public void onClick(View v) {
                     _onItemClickListener.onItemClick(_itemUIModel);
+                }
+            });
+
+            _itemItemBinding.getRoot().setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    _onItemLongClickListener.onItemLongClick(_itemUIModel);
+                    return false;
                 }
             });
         }

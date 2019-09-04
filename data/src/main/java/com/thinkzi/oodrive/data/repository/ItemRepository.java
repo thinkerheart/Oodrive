@@ -7,6 +7,7 @@ import com.google.gson.stream.JsonToken;
 import com.thinkzi.oodrive.data.exception.NetworkConnectionException;
 import com.thinkzi.oodrive.data.mapper.ItemDataModelMapper;
 import com.thinkzi.oodrive.data.mapper.UserDataModelMapper;
+import com.thinkzi.oodrive.data.model.CreateNewFolderPOSTRequestBodyDataModel;
 import com.thinkzi.oodrive.data.model.ItemDataModel;
 import com.thinkzi.oodrive.data.model.UserDataModel;
 import com.thinkzi.oodrive.data.net.APIConnection;
@@ -16,6 +17,10 @@ import com.thinkzi.oodrive.domain.repository.IItemRepository;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import io.reactivex.Completable;
+import io.reactivex.CompletableObserver;
+import io.reactivex.CompletableSource;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
@@ -24,6 +29,7 @@ import io.reactivex.Single;
 import io.reactivex.SingleEmitter;
 import io.reactivex.SingleOnSubscribe;
 import io.reactivex.SingleSource;
+import io.reactivex.functions.Action;
 import io.reactivex.functions.Function;
 import okhttp3.ResponseBody;
 
@@ -125,7 +131,7 @@ public class ItemRepository implements IItemRepository {
 
     @Override
     public Single<Item> createNewFolder(String _id, String _name) {
-        return APIConnection.getInstance().createNewFolder(_id, _name).flatMap(new Function<ItemDataModel, SingleSource<Item>>() {
+        return APIConnection.getInstance().createNewFolder(_id, new CreateNewFolderPOSTRequestBodyDataModel(_name)).flatMap(new Function<ItemDataModel, SingleSource<Item>>() {
             @Override
             public SingleSource<Item> apply(final ItemDataModel itemDataModel) throws Exception {
 
@@ -146,5 +152,10 @@ public class ItemRepository implements IItemRepository {
 
             }
         });
+    }
+
+    @Override
+    public Completable deleteItem(String _id) {
+        return APIConnection.getInstance().deleteItem(_id);
     }
 }

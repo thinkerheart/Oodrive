@@ -1,6 +1,7 @@
 package com.thinkzi.oodrive.ui.view.activity;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
@@ -74,6 +75,23 @@ public class ItemUIModelListActivity extends BaseActivity implements CreateNewFo
                 Toast.makeText(ItemUIModelListActivity.this, itemUIModel.getName(), Toast.LENGTH_LONG).show();
                 _itemUIModelListViewModel.getRemoteFolderContent(itemUIModel);
             }
+        }, new ItemUIModelListAdapter.OnItemLongClickListener() {
+            @Override
+            public void onItemLongClick(final ItemUIModel _itemUIModel) {
+
+                new AlertDialog.Builder(ItemUIModelListActivity.this)
+                        .setTitle(R.string.title_dialog_delete_item)
+                        .setMessage(R.string.message_dialog_delete_item)
+                        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                Toast.makeText(ItemUIModelListActivity.this, _itemUIModel.getName(), Toast.LENGTH_LONG).show();
+                                _itemUIModelListViewModel.deleteItem(_itemUIModel.getId());
+                            }
+                        })
+                        .setNegativeButton(R.string.cancel, null)
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .show();
+            }
         });
 
         // set adapter for RecyclerView
@@ -101,13 +119,6 @@ public class ItemUIModelListActivity extends BaseActivity implements CreateNewFo
             }
         });
 
-        _itemUIModelListViewModel.getNewCreatedItemUIModelMutableLiveData().observe(ItemUIModelListActivity.this, new Observer<ItemUIModel>() {
-            @Override
-            public void onChanged(ItemUIModel itemUIModel) {
-                Toast.makeText(ItemUIModelListActivity.this, itemUIModel.getName() + " " + getResources().getString(R.string.created), Toast.LENGTH_LONG).show();
-            }
-        });
-
     }
 
     @Override
@@ -128,7 +139,9 @@ public class ItemUIModelListActivity extends BaseActivity implements CreateNewFo
                 return true;
 
             case R.id.action_create_new_folder:
-                showCreateNewFolderDialogFragment();
+                if (_itemUIModelListViewModel.getItemUIModelStackMutableLiveData().getValue().size() > 0) {
+                    showCreateNewFolderDialogFragment();
+                }
                 return true;
 
             default:
@@ -157,7 +170,9 @@ public class ItemUIModelListActivity extends BaseActivity implements CreateNewFo
 
     @Override
     public void onDialogPositiveClick(String _folderName) {
+
         _itemUIModelListViewModel.createNewFolder(_folderName);
+
     }
 
     @Override

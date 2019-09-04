@@ -8,8 +8,10 @@ import com.thinkzi.oodrive.domain.entity.Item;
 import com.thinkzi.oodrive.domain.entity.User;
 import com.thinkzi.oodrive.domain.exception.DefaultErrorBundle;
 import com.thinkzi.oodrive.domain.usecase.CreateNewFolderUseCase;
+import com.thinkzi.oodrive.domain.usecase.DeleteAnItemUseCase;
 import com.thinkzi.oodrive.domain.usecase.WatchRemoteCurrentUserUseCase;
 import com.thinkzi.oodrive.domain.usecase.WatchRemoteFolderContentUseCase;
+import com.thinkzi.oodrive.domain.usecase.base.CompletableObserver;
 import com.thinkzi.oodrive.domain.usecase.base.ObservableObserver;
 import com.thinkzi.oodrive.domain.usecase.base.SingleObserver;
 import com.thinkzi.oodrive.ui.mapper.ItemUIModelMapper;
@@ -40,6 +42,9 @@ public class ItemUIModelListViewModel extends BaseViewModel {
     // UseCase(Clean Architecture) to create a new folder
     private final CreateNewFolderUseCase _createNewFolderUseCase;
 
+    // UseCase(Clean Architecture) to delete an item
+    private final DeleteAnItemUseCase _deleteAnItemUseCase;
+
     // a mapper to map data between 2 layers domain and app(ui)
     private final ItemUIModelMapper _itemUIModelMapper;
 
@@ -63,11 +68,12 @@ public class ItemUIModelListViewModel extends BaseViewModel {
 
     @Inject
     public ItemUIModelListViewModel(WatchRemoteCurrentUserUseCase _watchRemoteCurrentUserUseCase, WatchRemoteFolderContentUseCase _watchRemoteFolderContentUseCase, CreateNewFolderUseCase _createNewFolderUseCase,
-                                    ItemUIModelMapper _itemUIModelMapper, UserUIModelMapper _userUIModelMapper, Context _context) {
+                                    DeleteAnItemUseCase _deleteAnItemUseCase, ItemUIModelMapper _itemUIModelMapper, UserUIModelMapper _userUIModelMapper, Context _context) {
         super();
         this._watchRemoteCurrentUserUseCase = _watchRemoteCurrentUserUseCase;
         this._watchRemoteFolderContentUseCase = _watchRemoteFolderContentUseCase;
         this._createNewFolderUseCase = _createNewFolderUseCase;
+        this._deleteAnItemUseCase = _deleteAnItemUseCase;
         this._itemUIModelMapper = _itemUIModelMapper;
         this._userUIModelMapper = _userUIModelMapper;
         this._itemUIModelListMutableLiveData = new MutableLiveData<>();
@@ -142,10 +148,8 @@ public class ItemUIModelListViewModel extends BaseViewModel {
      * go back to parent folder
      * */
     public void goBackToParentFolder(String _id) {
-
         clearItemUIModelList();
         _watchRemoteFolderContentUseCase.execute(new WatchRemoteFolderContentObserver(), WatchRemoteFolderContentUseCase.Ps.forPs(_id));
-
     }
 
     /**
@@ -153,7 +157,15 @@ public class ItemUIModelListViewModel extends BaseViewModel {
      * */
     public void createNewFolder(String _folderName) {
         ItemUIModel _itemUIModel = _itemUIModelStackMutableLiveData.getValue().pop();
+        _itemUIModelStackMutableLiveData.getValue().push(_itemUIModel);
         this._createNewFolderUseCase.execute(new CreateNewFolderObserver(), CreateNewFolderUseCase.Ps.forPs(_itemUIModel.getId(), _folderName));
+    }
+
+    /**
+     * delete an item
+     * */
+    public void deleteItem(String _id) {
+        this._deleteAnItemUseCase.execute(new DeleteAnItemObserver(), DeleteAnItemUseCase.Ps.forPs(_id));
     }
 
     /**
@@ -161,7 +173,6 @@ public class ItemUIModelListViewModel extends BaseViewModel {
      * */
     private void handleUser(User _user) {
         _userUIModelMutableLiveData.setValue(_userUIModelMapper.transform(_user));
-        //getRemoteFolderContent(_userUIModelMutableLiveData.getValue().getRootItem());
         clearItemUIModelList();
         List<ItemUIModel> _itemUIModelList = _itemUIModelListMutableLiveData.getValue();
         _itemUIModelList.add(_userUIModelMutableLiveData.getValue().getRootItem());
@@ -182,6 +193,14 @@ public class ItemUIModelListViewModel extends BaseViewModel {
      * */
     private void handleNewCreatedItem(Item _item) {
         _newCreatedItemUIModelMutableLiveData.setValue(_itemUIModelMapper.transform(_item));
+        getRemoteFolderContent(popItemUIModelStackMutableLiveData());
+    }
+
+    /**
+     * handle signal from DeleteAnItemUseCase
+     * */
+    private void handleDeletedItem() {
+        getRemoteFolderContent(popItemUIModelStackMutableLiveData());
     }
 
     /**
@@ -225,14 +244,31 @@ public class ItemUIModelListViewModel extends BaseViewModel {
     }
 
     /**
-     * provide a observer to new created item sent from server
+     * provide a observer to trait new created item sent from server
      * */
     private final class CreateNewFolderObserver extends SingleObserver<Item> {
 
         @Override
         public void onSuccess(Item _item) {
             handleNewCreatedItem(_item);
-            _createNewFolderUseCase.dispose();
+            //_createNewFolderUseCase.dispose();
+        }
+
+        @Override
+        public void onError(Throwable e) {
+            handleError(new DefaultErrorBundle((Exception) e));
+        }
+
+    }
+
+    /**
+     * provide a observer to treat signal when delete an item
+     */
+    private final class DeleteAnItemObserver extends CompletableObserver {
+
+        @Override
+        public void onComplete() {
+            handleDeletedItem();
         }
 
         @Override
