@@ -1,6 +1,5 @@
 package com.thinkzi.oodrive.domain.usecase;
 
-import com.thinkzi.oodrive.domain.entity.Item;
 import com.thinkzi.oodrive.domain.entity.User;
 import com.thinkzi.oodrive.domain.executor.PostExecutionThread;
 import com.thinkzi.oodrive.domain.executor.ThreadExecutor;

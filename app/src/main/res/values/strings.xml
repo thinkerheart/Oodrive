@@ -5,4 +5,13 @@
     <string name="exception_message_generic">There was an application error</string>
     <string name="exception_message_no_connection">There is no internet connection</string>
 
+    //ItemUIModelListActivity
+    <string name="create_new_folder">Create new folder</string>
+    <string name="created">created</string>
+
+    //CreateNewFolderDialogFragment
+    <string name="name_folder">Folder name</string>
+    <string name="ok">Ok</string>
+    <string name="cancel">Cancel</string>
+
 </resources>

@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.thinkzi.oodrive.domain.entity.Item;
 import com.thinkzi.oodrive.domain.entity.User;
 import com.thinkzi.oodrive.domain.exception.DefaultErrorBundle;
+import com.thinkzi.oodrive.domain.usecase.CreateNewFolderUseCase;
 import com.thinkzi.oodrive.domain.usecase.WatchRemoteCurrentUserUseCase;
 import com.thinkzi.oodrive.domain.usecase.WatchRemoteFolderContentUseCase;
 import com.thinkzi.oodrive.domain.usecase.base.ObservableObserver;
@@ -36,6 +37,9 @@ public class ItemUIModelListViewModel extends BaseViewModel {
     // UseCase(Clean Architecture) to watch content of a folder from server
     private final WatchRemoteFolderContentUseCase _watchRemoteFolderContentUseCase;
 
+    // UseCase(Clean Architecture) to create a new folder
+    private final CreateNewFolderUseCase _createNewFolderUseCase;
+
     // a mapper to map data between 2 layers domain and app(ui)
     private final ItemUIModelMapper _itemUIModelMapper;
 
@@ -51,15 +55,19 @@ public class ItemUIModelListViewModel extends BaseViewModel {
     // a live data of folder stack navigation
     private final MutableLiveData<Stack<ItemUIModel>> _itemUIModelStackMutableLiveData;
 
+    // a live data new created ItemUIModel
+    private final MutableLiveData<ItemUIModel> _newCreatedItemUIModelMutableLiveData;
+
     // application context
     private final Context _context;
 
     @Inject
-    public ItemUIModelListViewModel(WatchRemoteCurrentUserUseCase _watchRemoteCurrentUserUseCase, WatchRemoteFolderContentUseCase _watchRemoteFolderContentUseCase,
+    public ItemUIModelListViewModel(WatchRemoteCurrentUserUseCase _watchRemoteCurrentUserUseCase, WatchRemoteFolderContentUseCase _watchRemoteFolderContentUseCase, CreateNewFolderUseCase _createNewFolderUseCase,
                                     ItemUIModelMapper _itemUIModelMapper, UserUIModelMapper _userUIModelMapper, Context _context) {
         super();
         this._watchRemoteCurrentUserUseCase = _watchRemoteCurrentUserUseCase;
         this._watchRemoteFolderContentUseCase = _watchRemoteFolderContentUseCase;
+        this._createNewFolderUseCase = _createNewFolderUseCase;
         this._itemUIModelMapper = _itemUIModelMapper;
         this._userUIModelMapper = _userUIModelMapper;
         this._itemUIModelListMutableLiveData = new MutableLiveData<>();
@@ -68,6 +76,8 @@ public class ItemUIModelListViewModel extends BaseViewModel {
         this._userUIModelMutableLiveData.setValue(new UserUIModel());
         this._itemUIModelStackMutableLiveData = new MutableLiveData<>();
         this._itemUIModelStackMutableLiveData.setValue(new Stack<ItemUIModel>());
+        this._newCreatedItemUIModelMutableLiveData = new MutableLiveData<>();
+        this._newCreatedItemUIModelMutableLiveData.setValue(new ItemUIModel());
         this._context = _context;
 
         getRemoteCurrentUser();
@@ -77,12 +87,12 @@ public class ItemUIModelListViewModel extends BaseViewModel {
         return _itemUIModelListMutableLiveData;
     }
 
-    public MutableLiveData<UserUIModel> getUserUIModelMutableLiveData() {
-        return _userUIModelMutableLiveData;
-    }
-
     public MutableLiveData<Stack<ItemUIModel>> getItemUIModelStackMutableLiveData() {
         return _itemUIModelStackMutableLiveData;
+    }
+
+    public MutableLiveData<ItemUIModel> getNewCreatedItemUIModelMutableLiveData() {
+        return _newCreatedItemUIModelMutableLiveData;
     }
 
     /**
@@ -139,6 +149,14 @@ public class ItemUIModelListViewModel extends BaseViewModel {
     }
 
     /**
+     * create new folder
+     * */
+    public void createNewFolder(String _folderName) {
+        ItemUIModel _itemUIModel = _itemUIModelStackMutableLiveData.getValue().pop();
+        this._createNewFolderUseCase.execute(new CreateNewFolderObserver(), CreateNewFolderUseCase.Ps.forPs(_itemUIModel.getId(), _folderName));
+    }
+
+    /**
      * handle received current user from WatchRemoteCurrentUserUseCase
      * */
     private void handleUser(User _user) {
@@ -157,6 +175,13 @@ public class ItemUIModelListViewModel extends BaseViewModel {
         List<ItemUIModel> _itemUIModelList = _itemUIModelListMutableLiveData.getValue();
         _itemUIModelList.add(_itemUIModelMapper.transform(_item));
         _itemUIModelListMutableLiveData.setValue(_itemUIModelList);
+    }
+
+    /**
+     * handle new created item from CreateNewFolderUseCase
+     * */
+    private void handleNewCreatedItem(Item _item) {
+        _newCreatedItemUIModelMutableLiveData.setValue(_itemUIModelMapper.transform(_item));
     }
 
     /**
@@ -195,6 +220,24 @@ public class ItemUIModelListViewModel extends BaseViewModel {
         @Override
         public void onComplete() {
             //_watchRemoteFolderContentUseCase.dispose();
+        }
+
+    }
+
+    /**
+     * provide a observer to new created item sent from server
+     * */
+    private final class CreateNewFolderObserver extends SingleObserver<Item> {
+
+        @Override
+        public void onSuccess(Item _item) {
+            handleNewCreatedItem(_item);
+            _createNewFolderUseCase.dispose();
+        }
+
+        @Override
+        public void onError(Throwable e) {
+            handleError(new DefaultErrorBundle((Exception) e));
         }
 
     }

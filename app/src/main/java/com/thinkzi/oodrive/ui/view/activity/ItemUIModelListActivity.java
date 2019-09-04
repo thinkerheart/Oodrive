@@ -3,11 +3,14 @@ package com.thinkzi.oodrive.ui.view.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.databinding.DataBindingUtil;
+import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -15,6 +18,7 @@ import com.thinkzi.oodrive.ui.R;
 import com.thinkzi.oodrive.ui.databinding.ActivityListItemBinding;
 import com.thinkzi.oodrive.ui.model.ItemUIModel;
 import com.thinkzi.oodrive.ui.view.adapter.ItemUIModelListAdapter;
+import com.thinkzi.oodrive.ui.view.fragment.CreateNewFolderDialogFragment;
 import com.thinkzi.oodrive.ui.viewmodel.ItemUIModelListViewModel;
 
 import java.util.ArrayList;
@@ -26,7 +30,7 @@ import javax.inject.Inject;
 /**
  * provide activity for show list of ItemUIModel
  * */
-public class ItemUIModelListActivity extends BaseActivity {
+public class ItemUIModelListActivity extends BaseActivity implements CreateNewFolderDialogFragment.CreateNewFolderDialogListener {
 
     @Inject
     ItemUIModelListViewModel _itemUIModelListViewModel;
@@ -97,6 +101,19 @@ public class ItemUIModelListActivity extends BaseActivity {
             }
         });
 
+        _itemUIModelListViewModel.getNewCreatedItemUIModelMutableLiveData().observe(ItemUIModelListActivity.this, new Observer<ItemUIModel>() {
+            @Override
+            public void onChanged(ItemUIModel itemUIModel) {
+                Toast.makeText(ItemUIModelListActivity.this, itemUIModel.getName() + " " + getResources().getString(R.string.created), Toast.LENGTH_LONG).show();
+            }
+        });
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.activity_list_itemuimodel_action, menu);
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -110,9 +127,18 @@ public class ItemUIModelListActivity extends BaseActivity {
                 }
                 return true;
 
+            case R.id.action_create_new_folder:
+                showCreateNewFolderDialogFragment();
+                return true;
+
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    public void showCreateNewFolderDialogFragment() {
+        CreateNewFolderDialogFragment _createNewFolderDialogFragment = new CreateNewFolderDialogFragment();
+        _createNewFolderDialogFragment.show(getSupportFragmentManager(), "CreateNewFolderDialogFragment");
     }
 
     @Override
@@ -127,5 +153,15 @@ public class ItemUIModelListActivity extends BaseActivity {
             System.exit(0);
         }
 
+    }
+
+    @Override
+    public void onDialogPositiveClick(String _folderName) {
+        _itemUIModelListViewModel.createNewFolder(_folderName);
+    }
+
+    @Override
+    public void onDialogNegativeClick(DialogFragment dialog) {
+        dialog.dismiss();
     }
 }

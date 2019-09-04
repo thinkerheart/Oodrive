@@ -59,7 +59,7 @@ public class ItemRepository implements IItemRepository {
                     @Override
                     public void subscribe(SingleEmitter<User> emitter) throws Exception {
                         try {
-                            // send photo data object as a stream to observers
+                            // send user data object as a stream to observers
                             emitter.onSuccess(_userDataModelMapper.transform(userDataModel));
                         } catch (Exception e) {
                             // send a error as result to observers
@@ -120,6 +120,31 @@ public class ItemRepository implements IItemRepository {
 
             }
 
+        });
+    }
+
+    @Override
+    public Single<Item> createNewFolder(String _id, String _name) {
+        return APIConnection.getInstance().createNewFolder(_id, _name).flatMap(new Function<ItemDataModel, SingleSource<Item>>() {
+            @Override
+            public SingleSource<Item> apply(final ItemDataModel itemDataModel) throws Exception {
+
+                return Single.create(new SingleOnSubscribe<Item>() {
+                    @Override
+                    public void subscribe(SingleEmitter<Item> emitter) throws Exception {
+
+                        try {
+                            // send new item data object as a stream to observers
+                            emitter.onSuccess(_itemDataModelMapper.transform(itemDataModel));
+                        } catch (Exception e) {
+                            // send a error as result to observers
+                            emitter.onError(new NetworkConnectionException(e.getCause()));
+                        }
+
+                    }
+                });
+
+            }
         });
     }
 }

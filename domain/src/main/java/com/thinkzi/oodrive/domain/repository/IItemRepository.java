@@ -21,4 +21,9 @@ public interface IItemRepository {
      */
     Observable<Item> getRemoteFolderContent(String _id);
 
+    /**
+     * create new folder with _name in a folder identified by _id
+     * */
+    Single<Item> createNewFolder(String _id, String _name);
+
 }
