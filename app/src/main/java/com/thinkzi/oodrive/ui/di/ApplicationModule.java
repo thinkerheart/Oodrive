@@ -54,7 +54,7 @@ public class ApplicationModule {
     }
 
     /**
-     * provide a photo repository
+     * provide a Item repository
      */
     @Provides
     @Singleton
